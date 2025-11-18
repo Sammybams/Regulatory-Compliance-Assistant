@@ -152,8 +152,8 @@ prompts:
       just reformulate it if needed and otherwise return it as is.
       ------
       <hs>
-      {history}
+      {{ history }}
       </hs>
       ------
-      Question: {question}
+      Question: {{ question }}
       Summary:
