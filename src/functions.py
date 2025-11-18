@@ -70,3 +70,69 @@ translation_format = {
     }
   }
 }
+
+scope_classifier_format = {
+  "format": {
+    "type": "json_object",
+    "json_schema": {
+      "name": "boolean_result",
+      "strict": True,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "value": { "type": "boolean" }
+        },
+        "required": ["value"],
+        "additionalProperties": False
+      }
+    }
+  }
+}
+
+
+response_with_citations_schema = {
+  "title": "pdpl_answer_with_citations",
+  "description": "Answer text with inline citations plus a citations array referencing Article & Paragraph and the quoted text used.",
+  "type": "object",
+  "properties": {
+    "answer": {
+      "type": "string",
+      "description": "Human-readable answer. May contain inline citations like (Article 23, Paragraph 5)."
+    },
+    "citations": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "properties": {
+          "article": { "type": "integer", "minimum": 1 },
+          "paragraph": { "type": "integer", "minimum": 1 },
+          "text": { "type": "string" }
+        },
+        "required": ["article", "paragraph", "text"],
+        "additionalProperties": False
+      },
+      "description": "Array of cited snippets used in the answer. May be empty if no context was used."
+    }
+  },
+  "required": ["answer", "citations"],
+  "additionalProperties": False
+}
+
+
+
+conversation_summary_format = {
+  "format": {
+    "type": "json_object",
+    "json_schema": {
+      "name": "conversation_summary_only",
+      "strict": True,
+      "schema": {
+        "type": "object",
+        "properties": {"summary": {"type": "string"}},
+        "required": ["summary"],
+        "additionalProperties": False
+      },
+    }
+  }
+}
