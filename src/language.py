@@ -93,3 +93,5 @@ if __name__ == "__main__":
     question = "What provisions are made in the personal data protection law for the rights of data subjects regarding access to their personal data? And from Articel 1, and Paragraphs 4, 5 and 6. What can you say? What about paragraph 6 in Article 23"
     translation = english_to_arabic_translation(question)
     print(translation)
+
+

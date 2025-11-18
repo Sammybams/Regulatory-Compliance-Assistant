@@ -76,7 +76,7 @@ def run_collection():
         print()
 
         try:
-            if conversation_history.strip() == "":
+            if conversation_history == []:
                 question_summary = st.session_state.prompt
             else:
                 question_summary = get_question_summary(st.session_state.prompt, conversation_history)

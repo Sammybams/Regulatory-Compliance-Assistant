@@ -100,19 +100,22 @@ def get_relevant_context(question_summary: str) -> list[dict]:
         )
 
     results_mentions = []
-    for record in mentions["articles"]:
-        article = record["article"]
-        paragraphs = record["paragraphs"]
-        for para in paragraphs:
-          res = chroma_collection.get(where={"$and": [{"article number": article}, {"paragraph number": str(para)}]}, include=["documents", "metadatas"])
-          for idx, doc in enumerate(res["documents"]):
-              results_mentions.append({
-                      "content": doc,
-                      "article number": res["metadatas"][idx]["article number"],
-                      "paragraph number": res["metadatas"][idx]["paragraph number"]
-                  }
-              )
-
+    try:
+      for record in mentions["articles"]:
+          article = record["article"]
+          paragraphs = record["paragraphs"]
+          for para in paragraphs:
+            res = chroma_collection.get(where={"$and": [{"article number": article}, {"paragraph number": str(para)}]}, include=["documents", "metadatas"])
+            for idx, doc in enumerate(res["documents"]):
+                results_mentions.append({
+                        "content": doc,
+                        "article number": res["metadatas"][idx]["article number"],
+                        "paragraph number": res["metadatas"][idx]["paragraph number"]
+                    }
+                )
+    except KeyError:
+      print("No articles found in the extracted mentions.")
+      
     return updated_results_search + results_mentions
 
 
@@ -161,4 +164,13 @@ if __name__ == "__main__":
     question = "What provisions are made in the personal data protection law for the rights of data subjects regarding access to their personal data? And from Articel 1, and Paragraphs 4, 5 and 6. What can you say? What about paragraph 6 in Article 23"
     # extraction_result = extract_articles_and_paragraphs(question)
     # print(json.dumps(extraction_result, indent=2))
-    print(query_response(question))
+    contexts = get_relevant_context(question)
+    print("Relevant Context:")
+    for context in contexts:
+      print(context)
+    print()
+
+    response = query_response(question, [], contexts)
+    print("Response:")
+    print(json.dumps(response, indent=2))
+    
