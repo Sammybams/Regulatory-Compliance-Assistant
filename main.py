@@ -1,32 +1,123 @@
-import os
+import streamlit as st
+import json
+from src.extraction import extract_articles_and_paragraphs, extract_qa_scope
+from src.language import arabic_to_english_translation, english_to_arabic_translation
+from src.q_and_a import get_question_summary, get_relevant_context, query_response
 
-from fastapi import FastAPI, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.exceptions import HTTPException
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
-from typing import Optional, Dict, List
-
-from dotenv import load_dotenv
-
-load_dotenv()
-
-app = FastAPI(
-    title = "AI Regulatory Compliance Assistant Backend API",
-    description = "API Documentation",
-    version = "1.0.0"
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+st.set_page_config(page_title="AI Regulatory Compliance Assistance", layout="wide", initial_sidebar_state="expanded")
+st.title("AI Regulatory Compliance Assistance 💬")
 
 
-# Home
-@app.get("/", tags=["Home"])
-async def index():
-    return {"Project": "AI Regulatory Compliance Assistant Backend"}
+if "language" not in st.session_state:
+    st.session_state.language = "English"
+
+if "prompt" not in st.session_state:
+    st.session_state.prompt = None
+
+
+if "messages" not in st.session_state:
+    # st.session_state.messages = messages
+    st.session_state.messages = []
+    # st.session_state.messages.append(('assistant', messages[0]["content"]))
+    # st.session_state.messages.append(('user', messages[1]["content"]))
+
+
+with st.sidebar:
+    # Choose language (English or Arabic)
+    st.markdown("## Settings")
+    language = st.selectbox(
+        "Language",
+        ("English", "Arabic")
+    )
+    st.session_state.language = language
+
+
+# ---------- Conversation loop ----------
+def run_collection():
+    if st.session_state.prompt:
+        print("Session Prompt")
+        print(st.session_state.prompt)
+        print()
+
+        prompt = st.session_state.prompt
+        st.session_state.messages.append(('user', prompt))
+    
+        # Get Most resent 
+        try:
+            scope = extract_qa_scope(st.session_state.prompt)
+        except Exception as e:
+            scope = True
+            print(f"Error in scope extraction: {e}")
+        print(f"Scope: {scope}")
+        print()
+
+        if not scope:
+            string = "Your question is outside the scope of the regulation. Please ask a relevant question."
+            st.session_state.messages.append(('assistant', string))
+            return
+
+        if st.session_state.language == "Arabic":
+            # Translate to English
+            translation = arabic_to_english_translation(st.session_state.prompt)
+            prompt = translation["translation"]
+
+        # Summarize question with conversation history
+        # format as AI: Human: 
+        print(st.session_state.messages[-7:-1])
+        conversation_history = []
+        # Last 3 messages
+        for role, text in st.session_state.messages[-7:-1]:
+            if role == "user":
+                conversation_history.append(f"Human: {text}\n")
+            else:
+                conversation_history.append(f"AI: {text}\n")
+        print("Conversation History:")
+        print(conversation_history)
+        print()
+
+        try:
+            if conversation_history.strip() == "":
+                question_summary = st.session_state.prompt
+            else:
+                question_summary = get_question_summary(st.session_state.prompt, conversation_history)
+        
+        except Exception as e:
+            question_summary = st.session_state.prompt
+            print(f"Error in question summarization: {e}")
+
+        print("Question Summary:")
+        print(question_summary)
+        print()
+
+        # Get relevant context
+        relevant_context = get_relevant_context(question_summary)
+        print("Relevant Context:")
+        print(relevant_context)
+        print()
+
+        # Get final answer
+        response = query_response(prompt, conversation_history, relevant_context)
+        message = response["answer"]
+        print("Final Response:")
+        print(message)
+        print()
+
+        # Translate back to Arabic if needed
+        if st.session_state.language == "Arabic":
+            message = english_to_arabic_translation(message)["translation"]
+        
+        # print(f"Message\n {message}")
+        st.session_state.messages.append(('assistant', message))
+
+
+# Input area for user queries
+if len(st.session_state.messages) < 2:
+    run_collection()
+
+st.chat_input("Enter your query", key='prompt', on_submit=run_collection)
+
+# Display chat messages
+
+# with message:
+for role, text in st.session_state.messages:
+    st.chat_message(role).write(text)

@@ -8,4 +8,5 @@
 *.pyc
 *.env
 *docs/
-*chroma_langchain_db/
+*etc/
+# *chroma_langchain_db/

@@ -1,8 +1,8 @@
 import os
 import json
 import yaml
-from functions import response_with_citations_schema, conversation_summary_format
-from extraction import extract_articles_and_paragraphs
+from .functions import response_with_citations_schema, conversation_summary_format
+from .extraction import extract_articles_and_paragraphs
 from pathlib import Path
 from openai import OpenAI
 from langchain_core.documents import Document
@@ -14,7 +14,9 @@ load_dotenv()
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-prompts = yaml.safe_load(Path("prompts.yml").read_text())
+script_location = Path(__file__).absolute().parent
+file_location = script_location / 'prompts.yml'
+prompts = yaml.safe_load(file_location.read_text())
 
 
 client = OpenAI(
@@ -63,7 +65,7 @@ def get_question_summary(question: str, conversation_history: list[str]) -> str:
                     "content": user_prompt
                 }
                 ],
-        extra_body={"reasoning": {"enabled": True}},
+        # extra_body={"reasoning": {"enabled": True}},
         text = conversation_summary_format
     )
 
@@ -82,6 +84,8 @@ def get_relevant_context(question_summary: str) -> list[dict]:
     """
     results_search = vector_store.similarity_search(question_summary, k=5)
     mentions = extract_articles_and_paragraphs(question_summary)
+    print("Extracted Articles and Paragraphs:")
+    print(mentions)
     
     # access the underlying chroma collection
     chroma_collection = vector_store._collection
@@ -96,7 +100,9 @@ def get_relevant_context(question_summary: str) -> list[dict]:
         )
 
     results_mentions = []
-    for article, paragraphs in mentions["articles"].items():
+    for record in mentions["articles"]:
+        article = record["article"]
+        paragraphs = record["paragraphs"]
         for para in paragraphs:
           res = chroma_collection.get(where={"$and": [{"article number": article}, {"paragraph number": str(para)}]}, include=["documents", "metadatas"])
           for idx, doc in enumerate(res["documents"]):

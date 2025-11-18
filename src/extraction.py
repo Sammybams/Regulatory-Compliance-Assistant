@@ -2,7 +2,7 @@ import os
 import json
 import yaml
 from pathlib import Path
-from functions import compliance_classifier, scope_classifier_format
+from .functions import compliance_classifier, scope_classifier_format
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -10,7 +10,9 @@ load_dotenv()
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-prompts = yaml.safe_load(Path("prompts.yml").read_text())
+script_location = Path(__file__).absolute().parent
+file_location = script_location / 'prompts.yml'
+prompts = yaml.safe_load(file_location.read_text())
 
 
 client = OpenAI(
