@@ -45,46 +45,50 @@ compliance_classifier_schema = {
 
 compliance_classifier = {
   "format": {
-    "type": "json_object",
-    "json_schema": {
-        "name": "extraction_result_integers",
-        "strict": True,
-        "schema": compliance_classifier_schema
-      }
+    # "type": "json_object",
+    "type": "json_schema",
+    # "json_schema": {
+    "name": "extraction_result_integers",
+    "strict": True,
+    "schema": compliance_classifier_schema
+      # }
   }
 }
 
 
 translation_format = {
   "format": {
-    "type": "json_object",
-    "json_schema": {
-      "name": "translation_only",
-      "strict": True,
-      "schema": {
-        "type": "object",
-        "properties": {"translation": {"type": "string"}},
-        "required": ["translation"],
-        "additionalProperties": False
-      },
+    # "type": "json_object",
+    "type": "json_schema",
+    # "json_schema": {
+    "name": "translation_only",
+    "strict": True,
+    "schema": {
+      "type": "object",
+      "properties": {"translation": {"type": "string"}},
+      "required": ["translation"],
+      "additionalProperties": False
+      # },
     }
   }
 }
 
 scope_classifier_format = {
   "format": {
-    "type": "json_object",
-    "json_schema": {
-      "name": "boolean_result",
-      "strict": True,
-      "schema": {
-        "type": "object",
-        "properties": {
-          "value": { "type": "boolean" }
-        },
-        "required": ["value"],
-        "additionalProperties": False
-      }
+    # "type": "json_object",
+    "type": "json_schema",
+
+    # "json_schema": {
+    "name": "boolean_result",
+    "strict": True,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": { "type": "boolean" }
+      },
+      "required": ["value"],
+      "additionalProperties": False
+      # }
     }
   }
 }
@@ -123,16 +127,18 @@ response_with_citations_schema = {
 
 conversation_summary_format = {
   "format": {
-    "type": "json_object",
-    "json_schema": {
-      "name": "conversation_summary_only",
-      "strict": True,
-      "schema": {
-        "type": "object",
-        "properties": {"summary": {"type": "string"}},
-        "required": ["summary"],
-        "additionalProperties": False
-      },
+    # "type": "json_object",
+    "type": "json_schema",
+
+    # "json_schema": {
+    "name": "conversation_summary_only",
+    "strict": True,
+    "schema": {
+      "type": "object",
+      "properties": {"summary": {"type": "string"}},
+      "required": ["summary"],
+      "additionalProperties": False
+      # },
     }
   }
 }

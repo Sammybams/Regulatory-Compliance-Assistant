@@ -23,16 +23,19 @@ client = OpenAI(
   base_url="https://openrouter.ai/api/v1",
   api_key=OPENROUTER_API_KEY,
 )
-embedding = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2",
-    # model_kwargs={"device": "cpu"}
-)
 
-vector_store = Chroma(
-    embedding_function=embedding,
-    collection_name="Personal_Data_Protection_Law_en",
-    persist_directory="../chroma_langchain_db",
-)
+def vector_db():
+    embedding = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2",
+        # model_kwargs={"device": "cpu"}
+    )
+
+    vector_store = Chroma(
+        embedding_function=embedding,
+        collection_name="Personal_Data_Protection_Law_en",
+        persist_directory="./chroma_langchain_db",
+    )
+    return vector_store
 
 def get_question_summary(question: str, conversation_history: list[str]) -> str:
     """
@@ -72,7 +75,7 @@ def get_question_summary(question: str, conversation_history: list[str]) -> str:
     response_dict = json.loads(response.output_text)
     return response_dict["summary"]
 
-def get_relevant_context(question_summary: str) -> list[dict]:
+def get_relevant_context(question_summary: str, vector_store) -> list[dict]:
     """
     Get relevant context snippets based on the question.
 
@@ -82,6 +85,8 @@ def get_relevant_context(question_summary: str) -> list[dict]:
     Returns:
         list[dict]: A list of relevant context snippets.
     """
+    print(f"Question Summary inside get_relevant_context: {question_summary}")
+    print(type(vector_store))
     results_search = vector_store.similarity_search(question_summary, k=5)
     mentions = extract_articles_and_paragraphs(question_summary)
     print("Extracted Articles and Paragraphs:")
@@ -90,6 +95,7 @@ def get_relevant_context(question_summary: str) -> list[dict]:
     # access the underlying chroma collection
     chroma_collection = vector_store._collection
     updated_results_search = []
+    print("Results Search:", results_search)
     for doc in results_search:
         updated_results_search.append(
             {
@@ -98,7 +104,7 @@ def get_relevant_context(question_summary: str) -> list[dict]:
                 "paragraph number": doc.metadata["paragraph number"]
             }
         )
-
+    print(f"Updated Results search: {updated_results_search}")
     results_mentions = []
     try:
       for record in mentions["articles"]:
@@ -115,7 +121,9 @@ def get_relevant_context(question_summary: str) -> list[dict]:
                 )
     except KeyError:
       print("No articles found in the extracted mentions.")
-      
+
+    print(f"Results Mentions: {results_mentions}")
+
     return updated_results_search + results_mentions
 
 
@@ -164,13 +172,23 @@ if __name__ == "__main__":
     question = "What provisions are made in the personal data protection law for the rights of data subjects regarding access to their personal data? And from Articel 1, and Paragraphs 4, 5 and 6. What can you say? What about paragraph 6 in Article 23"
     # extraction_result = extract_articles_and_paragraphs(question)
     # print(json.dumps(extraction_result, indent=2))
-    contexts = get_relevant_context(question)
-    print("Relevant Context:")
-    for context in contexts:
-      print(context)
+
+    # Test retrival of relevant context from vector store
+    # vector_store = vector_db()
+    retrieved = vector_store.similarity_search(question, k=5)
+    print("Retrieved Contexts:")
+    for doc in retrieved:
+      print(doc.page_content)
     print()
 
-    response = query_response(question, [], contexts)
-    print("Response:")
-    print(json.dumps(response, indent=2))
+
+    # contexts = get_relevant_context(question)
+    # print("Relevant Context:")
+    # for context in contexts:
+    #   print(context)
+    # print()
+
+    # response = query_response(question, [], contexts)
+    # print("Response:")
+    # print(json.dumps(response, indent=2))
     
